@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Evaluasi Cloud Computing</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+    padding: 20px;
+    color: #1f2937;
+  }
+  .container { max-width: 480px; margin: 0 auto; }
+  .card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 30px 24px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    margin-top: 40px;
+    text-align: center;
+  }
+  .hidden { display: none !important; }
+  h1.judul { color: #1d4ed8; font-size: 24px; margin-bottom: 4px; line-height: 1.3; }
+  p.subjudul { color: #6b7280; margin-bottom: 24px; }
+  input[type="text"] {
+    width: 100%; padding: 12px 14px; border: 1px solid #d1d5db;
+    border-radius: 8px; font-size: 15px; margin-bottom: 16px;
+  }
+  button {
+    width: 100%; padding: 13px; border: none; border-radius: 8px;
+    font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 10px;
+  }
+  .btn-primary { background: #2563eb; color: #fff; }
+  .btn-primary:hover { background: #1d4ed8; }
+  .btn-secondary { background: #fff; color: #2563eb; border: 1px solid #2563eb; }
+  .btn-secondary:hover { background: #eff6ff; }
+
+  .nyawa-bar { height: 8px; background: #e5e7eb; border-radius: 5px; overflow: hidden; margin-bottom: 18px; }
+  .nyawa-fill { height: 100%; background: #22c55e; width: 100%; transition: width 0.3s, background 0.3s; }
+  .info-row { display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 12px; color: #6b7280; text-transform: uppercase; }
+  .info-row b { display: block; font-size: 18px; color: #1f2937; text-transform: none; margin-top: 2px; }
+  .soal-box {
+    background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px;
+    padding: 18px; margin-bottom: 18px; font-size: 16px; font-weight: 600;
+    color: #1e3a8a; text-align: left; word-wrap: break-word; overflow-wrap: break-word;
+  }
+  .pilihan-btn {
+    display: block; width: 100%; text-align: left; background: #fff;
+    border: 1.5px solid #d1d5db; border-radius: 8px; padding: 12px 14px;
+    margin-bottom: 10px; font-size: 14.5px; font-weight: 500; color: #1f2937;
+    cursor: pointer; word-wrap: break-word; overflow-wrap: break-word; white-space: normal;
+  }
+  .pilihan-btn:hover:not(:disabled) { border-color: #93c5fd; }
+  .pilihan-btn.benar { background: #dcfce7; border-color: #22c55e; color: #166534; }
+  .pilihan-btn.salah { background: #fee2e2; border-color: #ef4444; color: #991b1b; }
+  .pilihan-btn:disabled { cursor: default; }
+
+  .hasil-judul { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .hasil-judul.selesai { color: #16a34a; }
+  .hasil-judul.gagal { color: #dc2626; }
+  .skor-besar { font-size: 54px; font-weight: 800; color: #2563eb; margin: 10px 0 2px; }
+  .skor-ket { color: #6b7280; margin-bottom: 22px; font-size: 13.5px; }
+
+  table { width: 100%; border-collapse: collapse; margin-bottom: 18px; font-size: 13.5px; }
+  th, td { padding: 8px 6px; border-bottom: 1px solid #e5e7eb; text-align: left; }
+  th { color: #6b7280; font-weight: 600; }
+
+  #loading-text { color: #6b7280; font-size: 14px; margin-top: 4px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div id="screen-landing" class="card">
+    <h1 class="judul">EVALUASI<br>CLOUD COMPUTING</h1>
+    <p class="subjudul">Masukkan nama Anda untuk memulai.</p>
+    <input type="text" id="input-nama" placeholder="Nama Peserta...">
+    <button class="btn-primary" onclick="mulaiKuis()">MULAI KUIS</button>
+    <button class="btn-secondary" onclick="bukaRiwayat()">📋 Lihat Riwayat Nilai</button>
+    <p id="loading-text" class="hidden">Memuat soal...</p>
+  </div>
+
+  <div id="screen-quiz" class="card hidden" style="text-align:left;">
+    <div class="nyawa-bar"><div class="nyawa-fill" id="nyawa-fill"></div></div>
+    <div class="info-row">
+      <div>KESEHATAN</div>
+      <div style="text-align:center;">SOAL<b id="info-soal">0/50</b></div>
+      <div style="text-align:right;">BENAR<b id="info-benar">0</b></div>
+    </div>
+    <div class="soal-box" id="teks-soal">Memuat soal...</div>
+    <button class="pilihan-btn" id="btn-a" onclick="pilihJawaban('A')"></button>
+    <button class="pilihan-btn" id="btn-b" onclick="pilihJawaban('B')"></button>
+    <button class="pilihan-btn" id="btn-c" onclick="pilihJawaban('C')"></button>
+    <button class="pilihan-btn" id="btn-d" onclick="pilihJawaban('D')"></button>
+  </div>
+
+  <div id="screen-hasil" class="card hidden">
+    <div class="hasil-judul" id="hasil-judul">EVALUASI SELESAI</div>
+    <p id="hasil-nama" style="font-weight:600; margin-bottom:6px;"></p>
+    <div class="skor-besar" id="hasil-skor">0</div>
+    <p class="skor-ket">Skor Maksimal: 100 &nbsp;|&nbsp; Benar: <span id="hasil-benar">0</span> &nbsp;Salah: <span id="hasil-salah">0</span></p>
+    <button class="btn-primary" onclick="kembaliKeAwal()">KEMBALI KE AWAL</button>
+    <button class="btn-secondary" onclick="bukaRiwayat()">📋 Lihat Riwayat Nilai</button>
+  </div>
+
+  <div id="screen-riwayat" class="card hidden">
+    <h2 style="color:#1d4ed8; margin-bottom:2px;">RIWAYAT EVALUASI</h2>
+    <p class="subjudul" style="margin-bottom:16px;">Daftar peserta yang telah menyelesaikan kuis</p>
+    <div style="max-height:320px; overflow-y:auto;">
+      <table>
+        <thead><tr><th>Nama</th><th>Benar</th><th>Salah</th><th>Skor</th></tr></thead>
+        <tbody id="tabel-riwayat-body"></tbody>
+      </table>
+    </div>
+    <button class="btn-secondary" onclick="unduhCSV()">⬇️ Unduh File CSV</button>
+    <button class="btn-primary" onclick="kembaliKeAwal()">KEMBALI</button>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script>
+const firebaseConfig = {
+   apiKey: "AIzaSyAvngCmmhdh_0IKMv3UpMCU_lXq1EYK6ps",
+   authDomain: "quizapplication-c0034.firebaseapp.com",
+   projectId: "quizapplication-c0034",
+   storageBucket: "quizapplication-c0034.firebasestorage.app",
+   messagingSenderId: "524989891652",
+   appId: "1:524989891652:web:2a33e25bc0c907cbee2811",
+   measurementId: "G-22M0EVBGF"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const NYAWA_MAX = 5;
+const TOTAL_SOAL = 50;
+
+let soalList = [];
+let currentIndex = 0;
+let nyawa = NYAWA_MAX;
+let jumlahBenar = 0;
+let jumlahSalah = 0;
+let namaPeserta = "";
+let sedangMenjawab = false;
+let soalSudahDimuat = false;
+
+// Variable Tambahan Security System
+let sessionDocId = "";
+let kuisBerjalan = false;
+
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function showScreen(id) {
+  ["screen-landing","screen-quiz","screen-hasil","screen-riwayat"].forEach(s => {
+    document.getElementById(s).classList.toggle("hidden", s !== id);
+  });
+}
+
+async function muatSoalJikaBelum() {
+  if (soalSudahDimuat) return;
+  document.getElementById("loading-text").classList.remove("hidden");
+  const snapshot = await db.collection("soal").get();
+  soalList = snapshot.docs.map(doc => doc.data());
+  soalSudahDimuat = true;
+  document.getElementById("loading-text").classList.add("hidden");
+}
+
+// ====== FITUR TAMBAHAN SECURITY SYSTEM ======
+async function aktifkanFullscreen() {
+  const elem = document.documentElement;
+  if (elem.requestFullscreen) {
+    await elem.requestFullscreen();
+  } else if (elem.webkitRequestFullscreen) {
+    await elem.webkitRequestFullscreen();
+  } else if (elem.msRequestFullscreen) {
+    await elem.msRequestFullscreen();
+  }
+}
+
+function pasangPengawasAntiCheat() {
+  document.addEventListener("fullscreenchange", () => {
+    if (!document.fullscreenElement && kuisBerjalan) {
+      eksekusiEliminasi("Keluar dari Mode Fullscreen!");
+    }
+  });
+
+  window.addEventListener("blur", () => {
+    if (kuisBerjalan) {
+      eksekusiEliminasi("Terdeteksi Membuka Jendela / Tab Lain!");
+    }
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden && kuisBerjalan) {
+      eksekusiEliminasi("Terdeteksi Memindahkan Jendela Kuis!");
+    }
+  });
+}
+
+async function hapusSesiAktif() {
+  if (sessionDocId) {
+    try {
+      await db.collection("sesi_aktif").doc(sessionDocId).delete();
+    } catch (e) {
+      console.error("Gagal hapus sesi:", e);
+    }
+  }
+}
+
+async function eksekusiEliminasi(alasan) {
+  if (!kuisBerjalan) return;
+  kuisBerjalan = false;
+  alert("Eitsss gaboleh curang! Anda tereliminasi karena: " + alasan);
+  selesaiKuis("gagal");
+}
+// ============================================
+
+async function mulaiKuis() {
+  const nama = document.getElementById("input-nama").value.trim();
+  if (!nama) { alert("Nama tidak boleh kosong."); return; }
+  namaPeserta = nama;
+
+  // Cek Sesi Aktif (Security Anti-Cheat)
+  try {
+    sessionDocId = namaPeserta.toLowerCase().replace(/\s+/g, '_');
+    const sessionRef = db.collection("sesi_aktif").doc(sessionDocId);
+    const sessionDoc = await sessionRef.get();
+
+    if (sessionDoc.exists) {
+      alert("Eitsss gaboleh curang! Nama ini sedang aktif mengerjakan kuis di perangkat lain.");
+      return;
+    }
+
+    await sessionRef.set({
+      nama: namaPeserta,
+      mulai: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    await muatSoalJikaBelum();
+  } catch (err) {
+    alert("Gagal memuat kuis / pemeriksaan keamanan: " + err.message);
+    await hapusSesiAktif();
+    return;
+  }
+
+  if (soalList.length === 0) { 
+    alert("Bank soal masih kosong di database."); 
+    await hapusSesiAktif();
+    return; 
+  }
+
+  // Masuk Fullscreen
+  try {
+    await aktifkanFullscreen();
+  } catch(e) {
+    console.log("Fullscreen ditolak browser");
+  }
+
+  shuffleArray(soalList);
+  currentIndex = 0;
+  nyawa = NYAWA_MAX;
+  jumlahBenar = 0;
+  jumlahSalah = 0;
+  sedangMenjawab = false;
+
+  kuisBerjalan = true;
+  pasangPengawasAntiCheat();
+
+  showScreen("screen-quiz");
+  renderNyawa();
+  renderSoal();
+}
+
+function renderNyawa() {
+  const persen = Math.max(0, (nyawa / NYAWA_MAX) * 100);
+  const fill = document.getElementById("nyawa-fill");
+  fill.style.width = persen + "%";
+  fill.style.background = persen > 50 ? "#22c55e" : (persen > 20 ? "#f59e0b" : "#ef4444");
+}
+
+function renderSoal() {
+  const soal = soalList[currentIndex];
+  document.getElementById("info-soal").innerText = (currentIndex + 1) + "/" + TOTAL_SOAL;
+  document.getElementById("info-benar").innerText = jumlahBenar;
+  document.getElementById("teks-soal").innerText = soal.teks_soal;
+
+  const map = { A: soal.pilihan_a, B: soal.pilihan_b, C: soal.pilihan_c, D: soal.pilihan_d };
+  ["A","B","C","D"].forEach(k => {
+    const btn = document.getElementById("btn-" + k.toLowerCase());
+    btn.innerText = k + ". " + map[k];
+    btn.className = "pilihan-btn";
+    btn.disabled = false;
+  });
+  sedangMenjawab = false;
+}
+
+function pilihJawaban(pilihan) {
+  if (sedangMenjawab || !kuisBerjalan) return;
+  sedangMenjawab = true;
+
+  const soal = soalList[currentIndex];
+  const benar = (pilihan === soal.kunci_jawaban);
+  const btn = document.getElementById("btn-" + pilihan.toLowerCase());
+
+  ["a","b","c","d"].forEach(k => document.getElementById("btn-" + k).disabled = true);
+  btn.classList.add(benar ? "benar" : "salah");
+
+  if (benar) {
+    jumlahBenar++;
+    nyawa = Math.min(NYAWA_MAX, nyawa + 1);
+  } else {
+    jumlahSalah++;
+    nyawa = Math.max(0, nyawa - 1);
+  }
+  renderNyawa();
+  document.getElementById("info-benar").innerText = jumlahBenar;
+
+  setTimeout(() => {
+    if (nyawa <= 0) {
+      selesaiKuis("gagal");
+    } else if (currentIndex + 1 >= Math.min(TOTAL_SOAL, soalList.length)) {
+      selesaiKuis("selesai");
+    } else {
+      currentIndex++;
+      renderSoal();
+    }
+  }, 900);
+}
+
+async function selesaiKuis(status) {
+  kuisBerjalan = false;
+  await hapusSesiAktif();
+
+  if (document.fullscreenElement) {
+    try { document.exitFullscreen(); } catch(e){}
+  }
+
+  const skorAkhir = Math.round((jumlahBenar / TOTAL_SOAL) * 100);
+
+  const judulEl = document.getElementById("hasil-judul");
+  judulEl.innerText = status === "gagal" ? "TERELIMINASI" : "EVALUASI SELESAI";
+  judulEl.className = "hasil-judul " + (status === "gagal" ? "gagal" : "selesai");
+  document.getElementById("hasil-nama").innerText = namaPeserta;
+  document.getElementById("hasil-skor").innerText = skorAkhir;
+  document.getElementById("hasil-benar").innerText = jumlahBenar;
+  document.getElementById("hasil-salah").innerText = jumlahSalah;
+
+  showScreen("screen-hasil");
+
+  try {
+    await db.collection("hasil_kuis").add({
+      nama_peserta: namaPeserta,
+      jumlah_benar: jumlahBenar,
+      jumlah_salah: jumlahSalah,
+      skor_akhir: skorAkhir,
+      status: status
+    });
+  } catch (err) {
+    console.error("Gagal menyimpan hasil:", err);
+  }
+}
+
+function kembaliKeAwal() {
+  document.getElementById("input-nama").value = "";
+  showScreen("screen-landing");
+}
+
+async function bukaRiwayat() {
+  showScreen("screen-riwayat");
+  const tbody = document.getElementById("tabel-riwayat-body");
+  tbody.innerHTML = "<tr><td colspan='4'>Memuat...</td></tr>";
+  try {
+    const snapshot = await db.collection("hasil_kuis").get();
+    if (snapshot.empty) {
+      tbody.innerHTML = "<tr><td colspan='4'>Belum ada data.</td></tr>";
+      return;
+    }
+    tbody.innerHTML = "";
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      const tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + d.nama_peserta + "</td><td>" + d.jumlah_benar + "</td><td>" + d.jumlah_salah + "</td><td>" + d.skor_akhir + "</td>";
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    tbody.innerHTML = "<tr><td colspan='4'>Gagal memuat: " + err.message + "</td></tr>";
+  }
+}
+
+async function unduhCSV() {
+  try {
+    const snapshot = await db.collection("hasil_kuis").get();
+    let csv = "Nama Peserta,Jumlah Benar,Jumlah Salah,Skor Akhir\n";
+    snapshot.forEach(doc => {
+      const d = doc.data();
+      csv += `"${d.nama_peserta}",${d.jumlah_benar},${d.jumlah_salah},${d.skor_akhir}\n`;
+    });
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "Rekap_Nilai_Kuis_CloudComputing.csv";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  } catch (err) {
+    alert("Gagal membuat file CSV: " + err.message);
+  }
+}
+</script>
+</body>
+</html>
