@@ -2,26 +2,76 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Test Koneksi Firestore - Quiz Cloud Computing</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Koneksi & Quiz Cloud Computing</title>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; color: #222; }
-    h2 { color: #1F4E78; }
-    #status { color: #555; font-weight: bold; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; color: #222; background-color: #f4f6f9; }
+    .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #e0e0e0; }
+    h2 { color: #1F4E78; text-align: center; margin-top: 0; }
+    #status { font-weight: bold; text-align: center; margin-bottom: 15px; }
+    input[type="text"] { width: 100%; padding: 12px; margin: 15px 0; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; }
+    
+    /* Style Karakter Robot */
+    .robot-container { display: flex; justify-content: space-around; margin: 15px 0; }
+    .robot-card { border: 2px solid #ccc; border-radius: 10px; padding: 10px; text-align: center; cursor: pointer; transition: 0.3s; width: 30%; }
+    .robot-card:hover, .robot-card.selected { border-color: #1F4E78; background-color: #e8f1f8; transform: scale(1.05); }
+    .robot-card img { width: 50px; height: 50px; }
+    .robot-card p { margin: 5px 0 0 0; font-size: 13px; font-weight: bold; }
+
+    button { width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 8px; }
+    .btn-primary { background-color: #1F4E78; color: white; }
+    .btn-primary:hover { background-color: #153552; }
+    
     #soal-box { border: 2px solid #1F4E78; border-radius: 8px; padding: 20px; margin-top: 20px; display: none; }
-    .pilihan { padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; background: #f7f9fb; }
+    .pilihan { padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; background: #f7f9fb; cursor: pointer; }
+    .pilihan:hover { background: #e8f1f8; border-color: #1F4E78; }
+    .warning { color: #d9534f; font-size: 13px; text-align: center; margin-top: 10px; font-weight: bold; }
+    #menu-awal { display: block; }
   </style>
 </head>
 <body>
 
-  <h2>Test Koneksi ke Firestore</h2>
-  <p id="status">Menghubungkan ke Firestore...</p>
+  <div class="card">
+    <h2>Quiz Cloud Computing</h2>
+    <p id="status">Menghubungkan ke Firestore...</p>
 
-  <div id="soal-box">
-    <p id="teks-soal"></p>
-    <div class="pilihan" id="pilihan-a"></div>
-    <div class="pilihan" id="pilihan-b"></div>
-    <div class="pilihan" id="pilihan-c"></div>
-    <div class="pilihan" id="pilihan-d"></div>
+    <!-- MENU AWAL -->
+    <div id="menu-awal">
+      <input type="text" id="input-nama" placeholder="Masukkan Nama Lengkap..." required>
+
+      <label style="font-weight: bold; font-size: 14px;">Pilih Pendamping Robot:</label>
+      <div class="robot-container">
+        <div class="robot-card selected" onclick="pilihRobot('Sentinel', this)">
+          <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Sentinel" alt="Sentinel">
+          <p>Sentinel</p>
+        </div>
+        <div class="robot-card" onclick="pilihRobot('Cyber', this)">
+          <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Cyber" alt="Cyber">
+          <p>Cyber</p>
+        </div>
+        <div class="robot-card" onclick="pilihRobot('Mecha', this)">
+          <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Mecha" alt="Mecha">
+          <p>Mecha</p>
+        </div>
+      </div>
+
+      <button class="btn-primary" onclick="mulaiKuis()">MULAI KUIS</button>
+      <p class="warning">⚠️ Dilarang berpindah tab saat kuis berlangsung!</p>
+    </div>
+
+    <!-- AREA SOAL (Diambil dari Firestore) -->
+    <div id="soal-box">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+        <span id="display-nama" style="font-weight: bold;"></span>
+        <span id="display-robot" style="font-weight: bold; color: #1F4E78;"></span>
+      </div>
+      <p id="teks-soal" style="font-weight: bold;"></p>
+      <div class="pilihan" id="pilihan-a" onclick="pilihJawaban('A')"></div>
+      <div class="pilihan" id="pilihan-b" onclick="pilihJawaban('B')"></div>
+      <div class="pilihan" id="pilihan-c" onclick="pilihJawaban('C')"></div>
+      <div class="pilihan" id="pilihan-d" onclick="pilihJawaban('D')"></div>
+    </div>
   </div>
 
   <!-- Firebase SDK Compat -->
@@ -29,45 +79,120 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
   <script>
-    // Konfigurasi Asli dari Firebase Console Anda
-   const firebaseConfig = {
-  apiKey: "AIzaSyAvngCmmhdh_0IKMv3UpMCU_lXq1EYK6ps",
-  authDomain: "quizapplication-c0034.firebaseapp.com",
-  projectId: "quizapplication-c0034",
-  storageBucket: "quizapplication-c0034.firebasestorage.app",
-  messagingSenderId: "524989891652",
-  appId: "1:524989891652:web:2a33e25bc0c907cbee2811",
-  measurementId: "G-22M0ERVBGF"
-};
+    // Konfigurasi Firebase Anda
+    const firebaseConfig = {
+      apiKey: "AIzaSyAvngCmmhdh_0IKMv3UpMCU_lXq1EYK6ps",
+      authDomain: "quizapplication-c0034.firebaseapp.com",
+      projectId: "quizapplication-c0034",
+      storageBucket: "quizapplication-c0034.firebasestorage.app",
+      messagingSenderId: "524989891652",
+      appId: "1:524989891652:web:2a33e25bc0c907cbee2811",
+      measurementId: "G-22M0ERVBGF"
+    };
 
-    // Inisialisasi Firebase & Firestore
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Mengambil data dari koleksi 'soal'
-    db.collection("soal").limit(1).get()
-      .then((querySnapshot) => {
-        if (!querySnapshot.empty) {
-          document.getElementById("status").innerText = "Koneksi Berhasil!";
-          document.getElementById("status").style.color = "green";
-          document.getElementById("soal-box").style.display = "block";
+    let namaPeserta = "";
+    let robotTerpilih = "Sentinel";
+    let dataSoal = [];
+    let indeksSoal = 0;
+    let skor = 0;
 
-          querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            document.getElementById("teks-soal").innerText = data.teks_soal || "Soal kosong";
-            document.getElementById("pilihan-a").innerText = "A. " + (data.pilihan_a || "");
-            document.getElementById("pilihan-b").innerText = "B. " + (data.pilihan_b || "");
-            document.getElementById("pilihan-c").innerText = "C. " + (data.pilihan_c || "");
-            document.getElementById("pilihan-d").innerText = "D. " + (data.pilihan_d || "");
-          });
-        } else {
-          document.getElementById("status").innerText = "Koneksi Berhasil, tapi belum ada data di koleksi 'soal'.";
-        }
+    // Cek koneksi awal
+    db.collection("soal").limit(1).get()
+      .then(() => {
+        document.getElementById("status").innerText = "Koneksi Firestore Berhasil!";
+        document.getElementById("status").style.color = "green";
       })
       .catch((error) => {
         document.getElementById("status").innerText = "Gagal terhubung: " + error.message;
         document.getElementById("status").style.color = "red";
       });
+
+    function pilihRobot(nama, elemen) {
+      robotTerpilih = nama;
+      document.querySelectorAll('.robot-card').forEach(card => card.classList.remove('selected'));
+      elemen.classList.add('selected');
+    }
+
+    function mulaiKuis() {
+      const input = document.getElementById("input-nama").value.trim();
+      if (!input) {
+        alert("Harap masukkan nama terlebih dahulu!");
+        return;
+      }
+      namaPeserta = input;
+
+      document.getElementById("menu-awal").style.display = "none";
+      document.getElementById("soal-box").style.display = "block";
+      document.getElementById("display-nama").innerText = "Peserta: " + namaPeserta;
+      document.getElementById("display-robot").innerText = "🤖 " + robotTerpilih;
+
+      aktifkanAntiCheat();
+      muatDataSoal();
+    }
+
+    function muatDataSoal() {
+      db.collection("soal").get()
+        .then((querySnapshot) => {
+          if (!querySnapshot.empty) {
+            dataSoal = [];
+            querySnapshot.forEach((doc) => dataSoal.push(doc.data()));
+            tampilkanSoal();
+          } else {
+            document.getElementById("teks-soal").innerText = "Belum ada data di koleksi 'soal'.";
+          }
+        });
+    }
+
+    function tampilkanSoal() {
+      if (indeksSoal < dataSoal.length) {
+        const item = dataSoal[indeksSoal];
+        document.getElementById("teks-soal").innerText = (indeksSoal + 1) + ". " + (item.teks_soal || "Soal kosong");
+        document.getElementById("pilihan-a").innerText = "A. " + (item.pilihan_a || "");
+        document.getElementById("pilihan-b").innerText = "B. " + (item.pilihan_b || "");
+        document.getElementById("pilihan-c").innerText = "C. " + (item.pilihan_c || "");
+        document.getElementById("pilihan-d").innerText = "D. " + (item.pilihan_d || "");
+      } else {
+        selesaiKuis();
+      }
+    }
+
+    function pilihJawaban(kunci) {
+      const item = dataSoal[indeksSoal];
+      if (kunci === item.jawaban_benar) skor += 10;
+      indeksSoal++;
+      tampilkanSoal();
+    }
+
+    function selesaiKuis() {
+      document.getElementById("soal-box").innerHTML = "<h3>Kuis Selesai!</h3><p>Menyimpan nilai ke Firestore...</p>";
+      
+      db.collection("hasil_kuis").add({
+        nama_peserta: namaPeserta,
+        robot: robotTerpilih,
+        skor_akhir: skor,
+        waktu_selesai: firebase.firestore.FieldValue.serverTimestamp()
+      })
+      .then(() => {
+        document.getElementById("soal-box").innerHTML = `
+          <h3>Kuis Selesai!</h3>
+          <p>Terima kasih <b>${namaPeserta}</b> & Robot <b>${robotTerpilih}</b>.</p>
+          <p>Skor Akhir Anda: <b>${skor}</b></p>
+          <button class="btn-primary" onclick="location.reload()">Ulangi Kuis</button>
+        `;
+      });
+    }
+
+    function aktifkanAntiCheat() {
+      document.addEventListener("visibilitychange", function() {
+        if (document.hidden) {
+          alert("PERINGATAN: Terdeteksi pindah tab! Kuis diakhiri.");
+          selesaiKuis();
+        }
+      });
+    }
   </script>
 </body>
 </html>
