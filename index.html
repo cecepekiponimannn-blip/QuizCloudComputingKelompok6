@@ -1,581 +1,73 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nimbo - Evaluasi Cloud Computing</title>
-<style>
-  :root {
-    --bg: #0a1020; --card: #111a2e; --card2: #0d1526; --line: #22304d;
-    --text: #e6edf7; --muted: #8a9bb8; --cyan: #22d3ee; --blue: #38bdf8;
-    --green: #34d399; --red: #f87171; --amber: #fbbf24;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; padding: 20px; min-height: 100vh;
-    font-family: 'Segoe UI', Arial, sans-serif; color: var(--text);
-    background-color: var(--bg);
-    background-image:
-      linear-gradient(rgba(34,211,238,0.05) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(34,211,238,0.05) 1px, transparent 1px);
-    background-size: 28px 28px;
-  }
-  .container { max-width: 520px; margin: 0 auto; }
-  .card {
-    background: var(--card); border: 1px solid var(--line);
-    border-radius: 16px; padding: 24px 20px; margin-top: 24px;
-  }
-  .hidden { display: none !important; }
-  .mono { font-family: Consolas, 'Courier New', monospace; }
-
-  .robot-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
-  .robot-slot { flex-shrink: 0; line-height: 0; }
-  .bubble {
-    background: var(--card2); border: 1px solid var(--line);
-    border-radius: 12px; padding: 10px 14px; font-size: 14px; line-height: 1.5;
-  }
-  .bubble small { display: block; font-size: 11px; color: var(--muted); margin-bottom: 2px; }
-
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
-  .mod {
-    border: 1px dashed var(--line); border-radius: 12px; padding: 12px;
-    opacity: 0.6; cursor: pointer; background: var(--card2);
-  }
-  .mod.aktif { border: 2px solid var(--cyan); opacity: 1; background: rgba(34,211,238,0.07); }
-  .mod.aktif:hover { box-shadow: 0 0 0 3px rgba(34,211,238,0.18); }
-  .mod-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-  .mod-ikon {
-    width: 34px; height: 34px; border-radius: 8px; background: var(--card);
-    display: flex; align-items: center; justify-content: center; font-size: 18px;
-  }
-  .mod-no { font-family: Consolas, 'Courier New', monospace; font-size: 11px; color: var(--muted); }
-  .mod.aktif .mod-no { color: var(--cyan); }
-  .mod-nama { font-size: 13px; font-weight: 600; margin: 0 0 6px; line-height: 1.4; }
-  .mod-status { font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
-  .mod.aktif .mod-status { color: var(--green); }
-  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; }
-  .info-modul { text-align: center; font-size: 11px; color: var(--muted); margin: 16px 0 0; }
-
-  .center { text-align: center; }
-  h1.judul { color: var(--cyan); font-size: 26px; margin: 4px 0; line-height: 1.3; }
-  p.subjudul { color: var(--muted); margin: 0 0 22px; }
-  input[type="text"] {
-    width: 100%; padding: 12px 14px; border: 1px solid var(--line);
-    border-radius: 10px; font-size: 15px; margin-bottom: 14px;
-    background: var(--card2); color: var(--text); outline: none;
-  }
-  input[type="text"]:focus { border-color: var(--cyan); }
-  button {
-    width: 100%; padding: 13px; border: none; border-radius: 10px;
-    font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 10px;
-  }
-  .btn-primary { background: var(--cyan); color: #04222b; }
-  .btn-primary:hover { background: #67e8f9; }
-  .btn-secondary { background: transparent; color: var(--cyan); border: 1px solid var(--cyan); }
-  .btn-secondary:hover { background: rgba(34,211,238,0.1); }
-  .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--line); }
-  .btn-ghost:hover { color: var(--text); }
-  #loading-text { color: var(--muted); font-size: 14px; margin: 4px 0 0; }
-
-  .quiz-top { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
-  .stat { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
-  .stat b { display: block; font-size: 18px; color: var(--text); text-transform: none; letter-spacing: 0; margin-top: 2px; }
-  .stat.grow { flex: 1; }
-  .baterai {
-    display: flex; gap: 3px; margin-top: 6px; padding: 3px; position: relative;
-    border: 1.5px solid var(--muted); border-radius: 6px; width: 100%; max-width: 120px;
-  }
-  .baterai::after {
-    content: ''; position: absolute; right: -6px; top: 50%; transform: translateY(-50%);
-    width: 3px; height: 8px; background: var(--muted); border-radius: 0 2px 2px 0;
-  }
-  .sel { flex: 1; height: 12px; border-radius: 2px; background: rgba(255,255,255,0.08); transition: 0.3s; }
-  .sel.on { background: var(--cyan); }
-  .baterai.low .sel.on { background: var(--amber); }
-  .baterai.kritis .sel.on { background: var(--red); }
-
-  .timer-row { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
-  .timer-bar { flex: 1; height: 8px; background: rgba(255,255,255,0.08); border-radius: 5px; overflow: hidden; }
-  .timer-fill { height: 100%; width: 100%; background: var(--blue); transition: width 1s linear, background 0.3s; }
-  .timer-text { font-size: 12px; font-weight: 700; color: var(--muted); min-width: 30px; text-align: right; }
-
-  .soal-box {
-    background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.35);
-    border-radius: 12px; padding: 16px; margin-bottom: 16px; font-size: 16px;
-    font-weight: 600; color: #dbeafe; text-align: left;
-    word-wrap: break-word; overflow-wrap: break-word;
-  }
-  .pilihan-btn {
-    display: block; width: 100%; text-align: left; background: var(--card2);
-    border: 1.5px solid var(--line); border-radius: 10px; padding: 12px 14px;
-    margin-bottom: 10px; font-size: 14.5px; font-weight: 500; color: var(--text);
-    cursor: pointer; word-wrap: break-word; overflow-wrap: break-word; white-space: normal;
-  }
-  .pilihan-btn:hover:not(:disabled) { border-color: var(--blue); }
-  .pilihan-btn.benar { background: rgba(52,211,153,0.15); border-color: var(--green); color: #a7f3d0; }
-  .pilihan-btn.salah { background: rgba(248,113,113,0.15); border-color: var(--red); color: #fecaca; }
-  .pilihan-btn:disabled { cursor: default; }
-
-  .hasil-judul { font-size: 22px; font-weight: 700; margin: 8px 0 4px; }
-  .hasil-judul.selesai { color: var(--green); }
-  .hasil-judul.gagal { color: var(--red); }
-  .skor-besar { font-size: 56px; font-weight: 800; color: var(--cyan); margin: 8px 0 2px; }
-  .skor-ket { color: var(--muted); margin: 0 0 8px; font-size: 13.5px; }
-  #status-simpan { font-size: 12px; margin: 0 0 18px; min-height: 16px; }
-
-  table { width: 100%; border-collapse: collapse; margin-bottom: 18px; font-size: 13.5px; }
-  th, td { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: left; }
-  th { color: var(--muted); font-weight: 600; }
-</style>
+  <meta charset="UTF-8">
+  <title>Test Koneksi Firestore - Quiz Cloud Computing</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 0 20px; color: #222; }
+    h2 { color: #1F4E78; }
+    #status { color: #555; font-weight: bold; }
+    #soal-box { border: 2px solid #1F4E78; border-radius: 8px; padding: 20px; margin-top: 20px; display: none; }
+    .pilihan { padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; background: #f7f9fb; }
+  </style>
 </head>
 <body>
-<div class="container">
 
-  <div id="screen-menu" class="card">
-    <div class="robot-head">
-      <div class="robot-slot" id="robot-menu"></div>
-      <div class="bubble">
-        <small class="mono" id="bubble-versi"></small>
-        <span id="bubble-menu-teks"></span>
-      </div>
-    </div>
-    <div class="grid" id="grid-matkul"></div>
-    <p class="info-modul mono" id="info-modul"></p>
+  <h2>Test Koneksi ke Firestore</h2>
+  <p id="status">Menghubungkan ke Firestore...</p>
+
+  <div id="soal-box">
+    <p id="teks-soal"></p>
+    <div class="pilihan" id="pilihan-a"></div>
+    <div class="pilihan" id="pilihan-b"></div>
+    <div class="pilihan" id="pilihan-c"></div>
+    <div class="pilihan" id="pilihan-d"></div>
   </div>
 
-  <div id="screen-landing" class="card hidden center">
-    <div class="robot-slot" id="robot-landing" style="margin-bottom:8px;"></div>
-    <div class="mono" style="font-size:12px;color:var(--muted);">evaluasi modul</div>
-    <h1 class="judul" id="judul-matkul">Cloud Computing</h1>
-    <p class="subjudul">Masukkan nama Anda untuk memulai.</p>
-    <input type="text" id="input-nama" placeholder="Nama Peserta...">
-    <button class="btn-primary" onclick="mulaiKuis()">MULAI KUIS</button>
-    <button class="btn-secondary" onclick="bukaRiwayat()">Lihat Riwayat Nilai</button>
-    <button class="btn-ghost" onclick="kembaliKeMenu()">Kembali ke menu</button>
-    <p id="loading-text" class="hidden">Memuat soal...</p>
-  </div>
+  <!-- Firebase SDK Compat -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
-  <div id="screen-quiz" class="card hidden">
-    <div class="quiz-top">
-      <div class="robot-slot" id="robot-quiz"></div>
-      <div class="stat grow">Baterai<div class="baterai" id="baterai"></div></div>
-      <div class="stat" style="text-align:center;">Soal<b id="info-soal">0/50</b></div>
-      <div class="stat" style="text-align:right;">Benar<b id="info-benar">0</b></div>
-    </div>
-    <div class="timer-row">
-      <div class="timer-bar"><div class="timer-fill" id="timer-fill"></div></div>
-      <span class="timer-text" id="timer-text">30s</span>
-    </div>
-    <div class="soal-box" id="teks-soal">Memuat soal...</div>
-    <button class="pilihan-btn" id="btn-a" onclick="pilihJawaban('A')"></button>
-    <button class="pilihan-btn" id="btn-b" onclick="pilihJawaban('B')"></button>
-    <button class="pilihan-btn" id="btn-c" onclick="pilihJawaban('C')"></button>
-    <button class="pilihan-btn" id="btn-d" onclick="pilihJawaban('D')"></button>
-  </div>
+  <script>
+    // Konfigurasi Asli dari Firebase Console Anda
+    const firebaseConfig = {
+      apiKey: "AIzaSyAvngCmmhdh_0IKMv3UpMCU_lXq1EYK6ps",
+      authDomain: "quizapplication-c0034.firebaseapp.com",
+      projectId: "quizapplication-c0034",
+      storageBucket: "quizapplication-c0034.firebasestorage.app",
+      messagingSenderId: "524989891652",
+      appId: "1:524989891652:web:2a33e25bc0c907cbee2811",
+      measurementId: "G-22M0EVBGF"
+    };
 
-  <div id="screen-hasil" class="card hidden center">
-    <div class="robot-slot" id="robot-hasil"></div>
-    <div class="hasil-judul" id="hasil-judul">EVALUASI SELESAI</div>
-    <p id="hasil-nama" style="font-weight:600; margin:0 0 6px;"></p>
-    <div class="skor-besar" id="hasil-skor">0</div>
-    <p class="skor-ket">Skor maksimal: 100 &nbsp;|&nbsp; Benar: <span id="hasil-benar">0</span> &nbsp;Salah: <span id="hasil-salah">0</span></p>
-    <p id="status-simpan"></p>
-    <button class="btn-primary" onclick="kembaliKeMenu()">KEMBALI KE MENU</button>
-    <button class="btn-secondary" onclick="bukaRiwayat()">Lihat Riwayat Nilai</button>
-  </div>
+    // Inisialisasi Firebase & Firestore
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-  <div id="screen-riwayat" class="card hidden">
-    <h2 style="color:var(--cyan); margin:0 0 2px;">RIWAYAT EVALUASI</h2>
-    <p class="subjudul" style="margin-bottom:16px;">Hasil evaluasi milik Anda sendiri</p>
-    <div style="max-height:320px; overflow-y:auto;">
-      <table>
-        <thead><tr><th>Nama</th><th>Benar</th><th>Salah</th><th>Skor</th></tr></thead>
-        <tbody id="tabel-riwayat-body"></tbody>
-      </table>
-    </div>
-    <button class="btn-secondary" onclick="unduhCSV()">Unduh File CSV</button>
-    <button class="btn-primary" onclick="kembaliKeMenu()">KEMBALI</button>
-  </div>
+    // Mengambil data dari koleksi 'soal'
+    db.collection("soal").limit(1).get()
+      .then((querySnapshot) => {
+        if (!querySnapshot.empty) {
+          document.getElementById("status").innerText = "Koneksi Berhasil!";
+          document.getElementById("status").style.color = "green";
+          document.getElementById("soal-box").style.display = "block";
 
-</div>
-
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script>
-// ====== GANTI 6 BARIS INI DENGAN firebaseConfig ASLI KAMU (copy dari file lama yang sudah jalan) ======
-const firebaseConfig = {
-  apiKey: "GANTI_DENGAN_API_KEY_KAMU",
-  authDomain: "GANTI_DENGAN_AUTH_DOMAIN_KAMU",
-  projectId: "GANTI_DENGAN_PROJECT_ID_KAMU",
-  storageBucket: "GANTI_DENGAN_STORAGE_BUCKET_KAMU",
-  messagingSenderId: "GANTI_DENGAN_SENDER_ID_KAMU",
-  appId: "GANTI_DENGAN_APP_ID_KAMU"
-};
-// =========================================================================================================
-
-// ====== PENGATURAN YANG MUDAH DIUBAH ======
-const NAMA_ROBOT = "Nimbo";
-const NYAWA_MAX = 5;
-const TOTAL_SOAL = 50;
-const WAKTU_PER_SOAL = 30;
-// Untuk mengaktifkan matkul lain nanti, ubah aktif menjadi true
-const MATKUL = [
-  { nama: "Cloud Computing", ikon: "☁️", aktif: true },
-  { nama: "Basis Data 1", ikon: "🗄️", aktif: false },
-  { nama: "Pemrograman 1", ikon: "💻", aktif: false },
-  { nama: "Teori Bahasa dan Automata", ikon: "🔤", aktif: false },
-  { nama: "Data Mining", ikon: "📊", aktif: false },
-  { nama: "Metode Numerik", ikon: "🧮", aktif: false },
-  { nama: "Interaksi Manusia dan Komputer", ikon: "🖱️", aktif: false },
-  { nama: "Rancangan Analisis Sistem", ikon: "🧩", aktif: false }
-];
-// ==========================================
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const auth = firebase.auth();
-
-let soalList = [];
-let currentIndex = 0;
-let nyawa = NYAWA_MAX;
-let jumlahBenar = 0;
-let jumlahSalah = 0;
-let namaPeserta = "";
-let sedangMenjawab = false;
-let soalSudahDimuat = false;
-let currentUser = null;
-let waktuTersisa = WAKTU_PER_SOAL;
-let timerInterval = null;
-let matkulDipilih = MATKUL[0];
-
-function robotSVG(mood, size) {
-  const warna = mood === "sad" ? "#f87171" : (mood === "happy" ? "#34d399" : "#22d3ee");
-  let mulut;
-  if (mood === "happy") {
-    mulut = '<path d="M24 41 Q32 48 40 41" fill="none" stroke="' + warna + '" stroke-width="2.5" stroke-linecap="round"/>';
-  } else if (mood === "sad") {
-    mulut = '<path d="M24 45 Q32 39 40 45" fill="none" stroke="' + warna + '" stroke-width="2.5" stroke-linecap="round"/>';
-  } else {
-    mulut = '<rect x="24" y="41" width="16" height="3" rx="1.5" fill="' + warna + '"/>';
-  }
-  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 64 64" aria-hidden="true">' +
-    '<line x1="32" y1="8" x2="32" y2="15" stroke="#22d3ee" stroke-width="2" stroke-linecap="round"/>' +
-    '<circle cx="32" cy="6" r="3" fill="' + warna + '"/>' +
-    '<rect x="5" y="27" width="6" height="11" rx="3" fill="#16233f" stroke="#22d3ee" stroke-width="1.5"/>' +
-    '<rect x="53" y="27" width="6" height="11" rx="3" fill="#16233f" stroke="#22d3ee" stroke-width="1.5"/>' +
-    '<rect x="10" y="15" width="44" height="34" rx="10" fill="#16233f" stroke="#22d3ee" stroke-width="1.5"/>' +
-    '<circle cx="24" cy="30" r="5" fill="#e6edf7"/><circle cx="40" cy="30" r="5" fill="#e6edf7"/>' +
-    '<circle cx="24" cy="30" r="2.5" fill="' + warna + '"/><circle cx="40" cy="30" r="2.5" fill="' + warna + '"/>' +
-    mulut +
-    '<rect x="20" y="52" width="24" height="9" rx="4" fill="#16233f" stroke="#22d3ee" stroke-width="1.5"/>' +
-    '</svg>';
-}
-
-function pasangRobot(idSlot, mood, size) {
-  document.getElementById(idSlot).innerHTML = robotSVG(mood, size);
-}
-
-function teksSapaan() {
-  return "Halo, saya " + NAMA_ROBOT + ". Pilih satu modul mata kuliah untuk mulai evaluasi.";
-}
-
-function renderMenu() {
-  const grid = document.getElementById("grid-matkul");
-  grid.innerHTML = "";
-  MATKUL.forEach((m, i) => {
-    const el = document.createElement("div");
-    el.className = "mod" + (m.aktif ? " aktif" : "");
-    const no = String(i + 1).padStart(2, "0");
-    el.innerHTML =
-      '<div class="mod-top"><span class="mod-ikon">' + m.ikon + '</span><span class="mod-no">modul ' + no + '</span></div>' +
-      '<p class="mod-nama"></p><div class="mod-status"></div>';
-    el.querySelector(".mod-nama").textContent = m.nama;
-    el.querySelector(".mod-status").innerHTML = m.aktif ? '<span class="dot"></span>Online' : '🔒 Sedang dirakit';
-    el.onclick = () => pilihMatkul(i);
-    grid.appendChild(el);
-  });
-  const jumlahAktif = MATKUL.filter(m => m.aktif).length;
-  document.getElementById("info-modul").innerText = jumlahAktif + " dari " + MATKUL.length + " modul aktif";
-}
-
-function pilihMatkul(i) {
-  const m = MATKUL[i];
-  if (!m.aktif) {
-    document.getElementById("bubble-menu-teks").innerText = "Modul " + m.nama + " masih dirakit. Coba modul yang sudah online dulu ya.";
-    pasangRobot("robot-menu", "sad", 64);
-    return;
-  }
-  matkulDipilih = m;
-  document.getElementById("judul-matkul").innerText = m.nama;
-  showScreen("screen-landing");
-}
-
-function kembaliKeMenu() {
-  clearInterval(timerInterval);
-  document.getElementById("input-nama").value = "";
-  document.getElementById("bubble-menu-teks").innerText = teksSapaan();
-  pasangRobot("robot-menu", "normal", 64);
-  showScreen("screen-menu");
-}
-
-function initBaterai() {
-  const b = document.getElementById("baterai");
-  b.innerHTML = "";
-  for (let i = 0; i < NYAWA_MAX; i++) {
-    const s = document.createElement("div");
-    s.className = "sel";
-    b.appendChild(s);
-  }
-}
-
-function renderNyawa() {
-  const b = document.getElementById("baterai");
-  Array.from(b.children).forEach((s, i) => s.classList.toggle("on", i < nyawa));
-  b.classList.toggle("low", nyawa === 2);
-  b.classList.toggle("kritis", nyawa <= 1);
-}
-
-async function pastikanAuth() {
-  if (currentUser) return currentUser;
-  const cred = await auth.signInAnonymously();
-  currentUser = cred.user;
-  return currentUser;
-}
-
-function shuffleArray(arr) {
-  for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [arr[i], arr[j]] = [arr[j], arr[i]];
-  }
-  return arr;
-}
-
-function showScreen(id) {
-  ["screen-menu", "screen-landing", "screen-quiz", "screen-hasil", "screen-riwayat"].forEach(s => {
-    document.getElementById(s).classList.toggle("hidden", s !== id);
-  });
-}
-
-async function muatSoalJikaBelum() {
-  if (soalSudahDimuat) return;
-  document.getElementById("loading-text").classList.remove("hidden");
-  const snapshot = await db.collection("soal").get();
-  soalList = snapshot.docs.map(doc => doc.data());
-  soalSudahDimuat = true;
-  document.getElementById("loading-text").classList.add("hidden");
-}
-
-async function mulaiKuis() {
-  const nama = document.getElementById("input-nama").value.trim();
-  if (!nama) { alert("Nama tidak boleh kosong."); return; }
-  namaPeserta = nama;
-
-  try {
-    await pastikanAuth();
-    await muatSoalJikaBelum();
-  } catch (err) {
-    document.getElementById("loading-text").classList.add("hidden");
-    alert("Gagal memulai: " + err.message + "\n\nPastikan Anonymous Authentication sudah diaktifkan dan Firestore Rules sudah dipublish.");
-    return;
-  }
-  if (soalList.length === 0) { alert("Bank soal masih kosong di database."); return; }
-
-  shuffleArray(soalList);
-  currentIndex = 0;
-  nyawa = NYAWA_MAX;
-  jumlahBenar = 0;
-  jumlahSalah = 0;
-  sedangMenjawab = false;
-
-  showScreen("screen-quiz");
-  renderNyawa();
-  renderSoal();
-}
-
-function renderSoal() {
-  const soal = soalList[currentIndex];
-  document.getElementById("info-soal").innerText = (currentIndex + 1) + "/" + TOTAL_SOAL;
-  document.getElementById("info-benar").innerText = jumlahBenar;
-  document.getElementById("teks-soal").innerText = soal.teks_soal;
-  pasangRobot("robot-quiz", "normal", 48);
-
-  const map = { A: soal.pilihan_a, B: soal.pilihan_b, C: soal.pilihan_c, D: soal.pilihan_d };
-  ["A", "B", "C", "D"].forEach(k => {
-    const btn = document.getElementById("btn-" + k.toLowerCase());
-    btn.innerText = k + ". " + map[k];
-    btn.className = "pilihan-btn";
-    btn.disabled = false;
-  });
-  sedangMenjawab = false;
-  mulaiTimer();
-}
-
-function mulaiTimer() {
-  clearInterval(timerInterval);
-  waktuTersisa = WAKTU_PER_SOAL;
-  updateTimerUI();
-  timerInterval = setInterval(() => {
-    waktuTersisa--;
-    updateTimerUI();
-    if (waktuTersisa <= 0) {
-      clearInterval(timerInterval);
-      pilihJawaban(null);
-    }
-  }, 1000);
-}
-
-function updateTimerUI() {
-  const persen = Math.max(0, (waktuTersisa / WAKTU_PER_SOAL) * 100);
-  const fill = document.getElementById("timer-fill");
-  fill.style.width = persen + "%";
-  fill.style.background = waktuTersisa <= 10 ? "#ef4444" : "#38bdf8";
-  document.getElementById("timer-text").innerText = waktuTersisa + "s";
-}
-
-function pilihJawaban(pilihan) {
-  if (sedangMenjawab) return;
-  sedangMenjawab = true;
-  clearInterval(timerInterval);
-
-  const soal = soalList[currentIndex];
-  const benar = (pilihan === soal.kunci_jawaban);
-
-  ["a", "b", "c", "d"].forEach(k => document.getElementById("btn-" + k).disabled = true);
-
-  if (pilihan) {
-    document.getElementById("btn-" + pilihan.toLowerCase()).classList.add(benar ? "benar" : "salah");
-  }
-  if (!benar) {
-    document.getElementById("btn-" + soal.kunci_jawaban.toLowerCase()).classList.add("benar");
-  }
-  pasangRobot("robot-quiz", benar ? "happy" : "sad", 48);
-
-  if (benar) {
-    jumlahBenar++;
-    nyawa = Math.min(NYAWA_MAX, nyawa + 1);
-  } else {
-    jumlahSalah++;
-    nyawa = Math.max(0, nyawa - 1);
-  }
-  renderNyawa();
-  document.getElementById("info-benar").innerText = jumlahBenar;
-
-  setTimeout(() => {
-    if (nyawa <= 0) {
-      selesaiKuis("gagal");
-    } else if (currentIndex + 1 >= Math.min(TOTAL_SOAL, soalList.length)) {
-      selesaiKuis("selesai");
-    } else {
-      currentIndex++;
-      renderSoal();
-    }
-  }, 1300);
-}
-
-async function selesaiKuis(status) {
-  clearInterval(timerInterval);
-  const skorAkhir = Math.round((jumlahBenar / TOTAL_SOAL) * 100);
-
-  const judulEl = document.getElementById("hasil-judul");
-  judulEl.innerText = status === "gagal" ? "BATERAI HABIS - TERELIMINASI" : "EVALUASI SELESAI";
-  judulEl.className = "hasil-judul " + (status === "gagal" ? "gagal" : "selesai");
-  document.getElementById("hasil-nama").innerText = namaPeserta;
-  document.getElementById("hasil-skor").innerText = skorAkhir;
-  document.getElementById("hasil-benar").innerText = jumlahBenar;
-  document.getElementById("hasil-salah").innerText = jumlahSalah;
-  pasangRobot("robot-hasil", status === "gagal" ? "sad" : "happy", 80);
-
-  const statusEl = document.getElementById("status-simpan");
-  statusEl.innerText = "Menyimpan hasil...";
-  statusEl.style.color = "var(--muted)";
-  showScreen("screen-hasil");
-
-  try {
-    await db.collection("hasil_kuis").add({
-      uid: currentUser.uid,
-      nama_peserta: namaPeserta,
-      matkul: matkulDipilih.nama,
-      jumlah_benar: jumlahBenar,
-      jumlah_salah: jumlahSalah,
-      skor_akhir: skorAkhir
-    });
-    statusEl.innerText = "Hasil tersimpan";
-    statusEl.style.color = "var(--green)";
-  } catch (err) {
-    console.error("Gagal menyimpan hasil:", err);
-    statusEl.innerText = "Hasil belum tersimpan (cek Firestore Rules)";
-    statusEl.style.color = "var(--red)";
-  }
-}
-
-async function bukaRiwayat() {
-  showScreen("screen-riwayat");
-  const tbody = document.getElementById("tabel-riwayat-body");
-  tbody.innerHTML = "<tr><td colspan='4'>Memuat...</td></tr>";
-  try {
-    await pastikanAuth();
-    const snapshot = await db.collection("hasil_kuis").where("uid", "==", currentUser.uid).get();
-    if (snapshot.empty) {
-      tbody.innerHTML = "<tr><td colspan='4'>Belum ada data.</td></tr>";
-      return;
-    }
-    tbody.innerHTML = "";
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      const tr = document.createElement("tr");
-      [d.nama_peserta, d.jumlah_benar, d.jumlah_salah, d.skor_akhir].forEach(v => {
-        const td = document.createElement("td");
-        td.textContent = v;
-        tr.appendChild(td);
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            document.getElementById("teks-soal").innerText = data.teks_soal || "Soal kosong";
+            document.getElementById("pilihan-a").innerText = "A. " + (data.pilihan_a || "");
+            document.getElementById("pilihan-b").innerText = "B. " + (data.pilihan_b || "");
+            document.getElementById("pilihan-c").innerText = "C. " + (data.pilihan_c || "");
+            document.getElementById("pilihan-d").innerText = "D. " + (data.pilihan_d || "");
+          });
+        } else {
+          document.getElementById("status").innerText = "Koneksi Berhasil, tapi belum ada data di koleksi 'soal'.";
+        }
+      })
+      .catch((error) => {
+        document.getElementById("status").innerText = "Gagal terhubung: " + error.message;
+        document.getElementById("status").style.color = "red";
       });
-      tbody.appendChild(tr);
-    });
-  } catch (err) {
-    tbody.innerHTML = "";
-    const tr = document.createElement("tr");
-    const td = document.createElement("td");
-    td.colSpan = 4;
-    td.textContent = "Gagal memuat: " + err.message;
-    tr.appendChild(td);
-    tbody.appendChild(tr);
-  }
-}
-
-function csvSafe(v) {
-  let s = String(v === undefined || v === null ? "" : v);
-  if (/^[=+\-@]/.test(s)) s = "'" + s;
-  return '"' + s.replace(/"/g, '""') + '"';
-}
-
-async function unduhCSV() {
-  try {
-    await pastikanAuth();
-    const snapshot = await db.collection("hasil_kuis").where("uid", "==", currentUser.uid).get();
-    let csv = "Nama Peserta,Jumlah Benar,Jumlah Salah,Skor Akhir\n";
-    snapshot.forEach(doc => {
-      const d = doc.data();
-      csv += csvSafe(d.nama_peserta) + "," + d.jumlah_benar + "," + d.jumlah_salah + "," + d.skor_akhir + "\n";
-    });
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "Rekap_Nilai_Kuis_CloudComputing.csv";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-  } catch (err) {
-    alert("Gagal membuat file CSV: " + err.message);
-  }
-}
-
-document.getElementById("bubble-versi").innerText = NAMA_ROBOT.toLowerCase() + " v1.0";
-document.getElementById("bubble-menu-teks").innerText = teksSapaan();
-pasangRobot("robot-menu", "normal", 64);
-pasangRobot("robot-landing", "normal", 72);
-renderMenu();
-initBaterai();
-</script>
+  </script>
 </body>
 </html>
