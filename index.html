@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nimbo - Evaluasi Cloud Computing</title>
+<title>QuizNesia - Evaluasi Cloud Computing</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
 <style>
   :root {
     --bg: #0a1020; --card: #111a2e; --card2: #0d1526; --line: #22304d;
@@ -29,6 +30,18 @@
   .mono { font-family: Consolas, 'Courier New', monospace; }
 
   .robot-head { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .logo-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 60px; height: 60px; border-radius: 16px; position: relative;
+    background: linear-gradient(135deg, rgba(34,211,238,0.15), rgba(56,189,248,0.05));
+    border: 1.5px solid var(--cyan);
+  }
+  .logo-badge .logo-text { font-size: 20px; font-weight: 800; color: var(--cyan); letter-spacing: 0.5px; }
+  .logo-badge .logo-v {
+    position: absolute; bottom: -7px; right: -7px; background: var(--cyan); color: #04222b;
+    font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px;
+    font-family: Consolas, monospace;
+  }
   .robot-slot { flex-shrink: 0; line-height: 0; }
   .bubble {
     background: var(--card2); border: 1px solid var(--line);
@@ -48,6 +61,8 @@
     width: 34px; height: 34px; border-radius: 8px; background: var(--card);
     display: flex; align-items: center; justify-content: center; font-size: 18px;
   }
+  .mod-ikon i { font-size: 17px; color: var(--muted); }
+  .mod.aktif .mod-ikon i { color: var(--cyan); }
   .mod-no { font-family: Consolas, 'Courier New', monospace; font-size: 11px; color: var(--muted); }
   .mod.aktif .mod-no { color: var(--cyan); }
   .mod-nama { font-size: 13px; font-weight: 600; margin: 0 0 6px; line-height: 1.4; }
@@ -131,15 +146,11 @@
 <body>
 <div class="container">
 
-  <div id="screen-menu" class="card">
-    <div class="robot-head">
-      <div class="robot-slot" id="robot-menu"></div>
-      <div class="bubble">
-        <small class="mono" id="bubble-versi"></small>
-        <span id="bubble-menu-teks"></span>
-      </div>
-    </div>
-    <div class="grid" id="grid-matkul"></div>
+  <div id="screen-menu" class="card center">
+    <div class="logo-badge"><span class="logo-text">QN</span><span class="logo-v">v1</span></div>
+    <h1 class="judul" style="margin:14px 0 6px;">Selamat datang di QuizNesia</h1>
+    <p class="subjudul" style="margin-bottom:20px;">Pilih satu modul mata kuliah untuk mulai evaluasi.</p>
+    <div class="grid" id="grid-matkul" style="text-align:left;"></div>
     <p class="info-modul mono" id="info-modul"></p>
   </div>
 
@@ -158,7 +169,7 @@
   <div id="screen-quiz" class="card hidden">
     <div class="quiz-top">
       <div class="robot-slot" id="robot-quiz"></div>
-      <div class="stat grow">Baterai<div class="baterai" id="baterai"></div></div>
+      <div class="stat grow">Kesehatan<div class="baterai" id="baterai"></div></div>
       <div class="stat" style="text-align:center;">Soal<b id="info-soal">0/50</b></div>
       <div class="stat" style="text-align:right;">Benar<b id="info-benar">0</b></div>
     </div>
@@ -178,7 +189,7 @@
     <div class="hasil-judul" id="hasil-judul">EVALUASI SELESAI</div>
     <p id="hasil-nama" style="font-weight:600; margin:0 0 6px;"></p>
     <div class="skor-besar" id="hasil-skor">0</div>
-    <p class="skor-ket">Skor maksimal: 100 &nbsp;|&nbsp; Benar: <span id="hasil-benar">0</span> &nbsp;Salah: <span id="hasil-salah">0</span></p>
+    <p class="skor-ket">Benar: <span id="hasil-benar">0</span> &nbsp;Salah: <span id="hasil-salah">0</span></p>
     <p id="status-simpan"></p>
     <button class="btn-primary" onclick="kembaliKeMenu()">KEMBALI KE MENU</button>
     <button class="btn-secondary" onclick="bukaRiwayat()">Lihat Riwayat Nilai</button>
@@ -186,14 +197,14 @@
 
   <div id="screen-riwayat" class="card hidden">
     <h2 style="color:var(--cyan); margin:0 0 2px;">RIWAYAT EVALUASI</h2>
-    <p class="subjudul" style="margin-bottom:16px;">Hasil evaluasi milik Anda sendiri</p>
+    <p class="subjudul" style="margin-bottom:16px;">Daftar mahasiswa yang telah menyelesaikan quiz</p>
     <div style="max-height:320px; overflow-y:auto;">
       <table>
         <thead><tr><th>Nama</th><th>Benar</th><th>Salah</th><th>Skor</th></tr></thead>
         <tbody id="tabel-riwayat-body"></tbody>
       </table>
     </div>
-    <button class="btn-secondary" onclick="unduhCSV()">Unduh File CSV</button>
+    <button class="btn-secondary" onclick="unduhExcel()">Unduh File Excel</button>
     <button class="btn-primary" onclick="kembaliKeMenu()">KEMBALI</button>
   </div>
 
@@ -202,6 +213,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script>
 // ====== GANTI 6 BARIS INI DENGAN firebaseConfig ASLI KAMU (copy dari file lama yang sudah jalan) ======
 const firebaseConfig = {
@@ -222,14 +234,14 @@ const TOTAL_SOAL = 50;
 const WAKTU_PER_SOAL = 30;
 // Untuk mengaktifkan matkul lain nanti, ubah aktif menjadi true
 const MATKUL = [
-  { nama: "Cloud Computing", ikon: "☁️", aktif: true },
-  { nama: "Basis Data 1", ikon: "🗄️", aktif: false },
-  { nama: "Pemrograman 1", ikon: "💻", aktif: false },
-  { nama: "Teori Bahasa dan Automata", ikon: "🔤", aktif: false },
-  { nama: "Data Mining", ikon: "📊", aktif: false },
-  { nama: "Metode Numerik", ikon: "🧮", aktif: false },
-  { nama: "Interaksi Manusia dan Komputer", ikon: "🖱️", aktif: false },
-  { nama: "Rancangan Analisis Sistem", ikon: "🧩", aktif: false }
+  { nama: "Cloud Computing", ikon: "ti-cloud", aktif: true },
+  { nama: "Basis Data 1", ikon: "ti-database", aktif: false },
+  { nama: "Pemrograman 1", ikon: "ti-code", aktif: false },
+  { nama: "Teori Bahasa dan Automata", ikon: "ti-abc", aktif: false },
+  { nama: "Data Mining", ikon: "ti-chart-histogram", aktif: false },
+  { nama: "Metode Numerik", ikon: "ti-calculator", aktif: false },
+  { nama: "Interaksi Manusia dan Komputer", ikon: "ti-device-desktop-analytics", aktif: false },
+  { nama: "Rancangan Analisis Sistem", ikon: "ti-sitemap", aktif: false }
 ];
 // ==========================================
 
@@ -277,10 +289,6 @@ function pasangRobot(idSlot, mood, size) {
   document.getElementById(idSlot).innerHTML = robotSVG(mood, size);
 }
 
-function teksSapaan() {
-  return "Halo, saya " + NAMA_ROBOT + ". Pilih satu modul mata kuliah untuk mulai evaluasi.";
-}
-
 function renderMenu() {
   const grid = document.getElementById("grid-matkul");
   grid.innerHTML = "";
@@ -289,7 +297,7 @@ function renderMenu() {
     el.className = "mod" + (m.aktif ? " aktif" : "");
     const no = String(i + 1).padStart(2, "0");
     el.innerHTML =
-      '<div class="mod-top"><span class="mod-ikon">' + m.ikon + '</span><span class="mod-no">modul ' + no + '</span></div>' +
+      '<div class="mod-top"><span class="mod-ikon"><i class="ti ' + m.ikon + '"></i></span><span class="mod-no">modul ' + no + '</span></div>' +
       '<p class="mod-nama"></p><div class="mod-status"></div>';
     el.querySelector(".mod-nama").textContent = m.nama;
     el.querySelector(".mod-status").innerHTML = m.aktif ? '<span class="dot"></span>Online' : '🔒 Sedang dirakit';
@@ -303,8 +311,7 @@ function renderMenu() {
 function pilihMatkul(i) {
   const m = MATKUL[i];
   if (!m.aktif) {
-    document.getElementById("bubble-menu-teks").innerText = "Modul " + m.nama + " masih dirakit. Coba modul yang sudah online dulu ya.";
-    pasangRobot("robot-menu", "sad", 64);
+    alert("Modul " + m.nama + " masih dirakit. Coba modul yang sudah online dulu ya.");
     return;
   }
   matkulDipilih = m;
@@ -315,8 +322,6 @@ function pilihMatkul(i) {
 function kembaliKeMenu() {
   clearInterval(timerInterval);
   document.getElementById("input-nama").value = "";
-  document.getElementById("bubble-menu-teks").innerText = teksSapaan();
-  pasangRobot("robot-menu", "normal", 64);
   showScreen("screen-menu");
 }
 
@@ -479,8 +484,8 @@ async function selesaiKuis(status) {
   const skorAkhir = Math.round((jumlahBenar / TOTAL_SOAL) * 100);
 
   const judulEl = document.getElementById("hasil-judul");
-  judulEl.innerText = status === "gagal" ? "BATERAI HABIS - TERELIMINASI" : "EVALUASI SELESAI";
-  judulEl.className = "hasil-judul " + (status === "gagal" ? "gagal" : "selesai");
+  judulEl.innerText = "EVALUASI SELESAI";
+  judulEl.className = "hasil-judul selesai";
   document.getElementById("hasil-nama").innerText = namaPeserta;
   document.getElementById("hasil-skor").innerText = skorAkhir;
   document.getElementById("hasil-benar").innerText = jumlahBenar;
@@ -543,37 +548,51 @@ async function bukaRiwayat() {
   }
 }
 
-function csvSafe(v) {
-  let s = String(v === undefined || v === null ? "" : v);
-  if (/^[=+\-@]/.test(s)) s = "'" + s;
-  return '"' + s.replace(/"/g, '""') + '"';
-}
-
-async function unduhCSV() {
+async function unduhExcel() {
   try {
     await pastikanAuth();
     const snapshot = await db.collection("hasil_kuis").where("uid", "==", currentUser.uid).get();
-    let csv = "Nama Peserta,Jumlah Benar,Jumlah Salah,Skor Akhir\n";
+
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Riwayat Evaluasi");
+    ws.columns = [
+      { header: "Nama Peserta", key: "nama", width: 26 },
+      { header: "Jumlah Benar", key: "benar", width: 16 },
+      { header: "Jumlah Salah", key: "salah", width: 16 },
+      { header: "Skor Akhir", key: "skor", width: 14 }
+    ];
+    const headerRow = ws.getRow(1);
+    headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1D4ED8" } };
+    headerRow.alignment = { vertical: "middle", horizontal: "center" };
+
     snapshot.forEach(doc => {
       const d = doc.data();
-      csv += csvSafe(d.nama_peserta) + "," + d.jumlah_benar + "," + d.jumlah_salah + "," + d.skor_akhir + "\n";
+      ws.addRow({ nama: d.nama_peserta, benar: d.jumlah_benar, salah: d.jumlah_salah, skor: d.skor_akhir });
     });
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+
+    ws.eachRow((row, i) => {
+      row.eachCell(cell => {
+        cell.border = { bottom: { style: "thin", color: { argb: "FFD9D9D9" } } };
+        if (i > 1) cell.alignment = { horizontal: "center", vertical: "middle" };
+      });
+    });
+
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "Rekap_Nilai_Kuis_CloudComputing.csv";
+    a.download = "Rekap_Nilai_Kuis_CloudComputing.xlsx";
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   } catch (err) {
-    alert("Gagal membuat file CSV: " + err.message);
+    alert("Gagal membuat file Excel: " + err.message);
   }
 }
 
-document.getElementById("bubble-versi").innerText = NAMA_ROBOT.toLowerCase() + " v1.0";
-document.getElementById("bubble-menu-teks").innerText = teksSapaan();
-pasangRobot("robot-menu", "normal", 64);
 pasangRobot("robot-landing", "normal", 72);
 renderMenu();
 initBaterai();
